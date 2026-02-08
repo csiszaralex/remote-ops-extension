@@ -46,10 +46,13 @@ export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsI
 
       for (const [groupName, servers] of serversByGroup.entries()) {
         groups.push(
-          new RemoteOpsItem('group', groupName, vscode.TreeItemCollapsibleState.Collapsed, {
+          new RemoteOpsItem(
+            'group',
             groupName,
-            servers,
-          }),
+            vscode.TreeItemCollapsibleState.Collapsed,
+            { groupName, servers },
+            `group-${groupName}`,
+          ),
         );
       }
       return Promise.resolve(groups);
@@ -63,10 +66,11 @@ export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsI
           (server) =>
             new RemoteOpsItem(
               'server',
-              server.label, // Ez jelenik meg
+              server.label,
               vscode.TreeItemCollapsibleState.Collapsed,
               server,
-              server.sshHost, // Description-nek jó lesz a host
+              `server-${server.sshHost}`,
+              server.sshHost,
             ),
         ),
       );
@@ -98,6 +102,7 @@ export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsI
                 label,
                 vscode.TreeItemCollapsibleState.None,
                 { serverHost: server.sshHost, path: envConfig.path, key: key },
+                `env-${server.sshHost}-${envConfig.path}-${key}`,
                 '...',
               );
 
@@ -105,24 +110,6 @@ export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsI
               items.push(envItem);
             });
           }
-          // const createEnvItem = (key: string, label?: string) => {
-          //   const displayName = label || key;
-          //   const envItem = new RemoteOpsItem(
-          //     'env',
-          //     displayName,
-          //     vscode.TreeItemCollapsibleState.None,
-          //     { serverHost: server.sshHost, path: env.path, key: key },
-          //     '...',
-          //   );
-          //   this.fetchEnvValue(envItem);
-          //   items.push(envItem);
-          // };
-
-          // if (env.keys && Array.isArray(env.keys)) {
-          //   env.keys.forEach((k) => createEnvItem(k));
-          // } else if (env.key) {
-          //   createEnvItem(env.key, env.label);
-          // }
         });
       }
 
@@ -135,6 +122,7 @@ export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsI
               action.label,
               vscode.TreeItemCollapsibleState.None,
               { ...action, serverHost: server.sshHost },
+              `action-${server.sshHost}-${action.label}`,
               Array.isArray(action.command) ? '(Multi-step script)' : action.command,
             ),
           );
@@ -190,12 +178,12 @@ export class RemoteOpsItem extends vscode.TreeItem {
     public readonly type: 'group' | 'server' | 'action' | 'env',
     public readonly label: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-    public readonly data: any, // Itt tároljuk a kontextust (pl. melyik szerverhez tartozik)
+    public readonly data: any,
+    public readonly id: string,
     public description?: string,
   ) {
     super(label, collapsibleState);
     this.tooltip = `${this.label}`;
-    this.description = description;
 
     // Ikonok beállítása típus szerint (Built-in Codicons)
     switch (type) {
