@@ -1,0 +1,73 @@
+{
+  "name": "remote-ops",
+  "displayName": "Remote Ops",
+  "description": "Pragmatic server management for engineers.",
+  "version": "0.1.0",
+  "author": "Alex Csiszar <vscode@csalex.dev>",
+  "keywords": [],
+  "license": "ISC",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "remote-ops-container",
+          "title": "Remote Ops",
+          "icon": "resources/server-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "remote-ops-container": [
+        {
+          "id": "remoteOpsServers",
+          "name": "Servers"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "remoteOps.refreshEntry",
+        "title": "Refresh",
+        "icon": "resources/refresh-icon.svg"
+      },
+      {
+        "command": "remoteOps.runCommand",
+        "title": "Run Command"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "remoteOps.refreshEntry",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "remoteOps.runCommand",
+          "group": "inline"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "@types/vscode": "^1.109.0",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.28.2"
+}
+
