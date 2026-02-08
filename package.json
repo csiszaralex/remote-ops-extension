@@ -53,7 +53,8 @@
       "view/item/context": [
         {
           "command": "remoteOps.runCommand",
-          "group": "inline"
+          "group": "inline",
+          "when": "viewItem == action || viewItem == env"
         }
       ]
     }

@@ -1,3 +1,4 @@
+import * as cp from 'child_process';
 import * as vscode from 'vscode';
 import { ConfigManager } from './config';
 import { ResolvedServer } from './types';
@@ -20,6 +21,10 @@ export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsI
    */
   refresh(): void {
     this._onDidChangeTreeData.fire();
+  }
+
+  refreshItem(item: RemoteOpsItem): void {
+    this._onDidChangeTreeData.fire(item);
   }
 
   /**
@@ -76,15 +81,23 @@ export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsI
       // A) Env Monitorok (Ha vannak)
       if (server.envMonitors && server.envMonitors.length > 0) {
         server.envMonitors.forEach((env) => {
-          items.push(
-            new RemoteOpsItem(
-              'env',
-              `${env.key}`, // Label: "NODE_ENV"
-              vscode.TreeItemCollapsibleState.None,
-              { ...env, serverHost: server.sshHost },
-              'Loading...', // Kezdeti érték (Description)
-            ),
+          // JAVÍTÁS 1: Label használata Key helyett (ha van)
+          const displayName = env.label || env.key;
+
+          const envItem = new RemoteOpsItem(
+            'env',
+            displayName,
+            vscode.TreeItemCollapsibleState.None,
+            { ...env, serverHost: server.sshHost },
+            'Loading...', // Kezdeti állapot
           );
+
+          // JAVÍTÁS 2: Auto-fetch
+          // Azonnal elindítjuk a lekérdezést a háttérben.
+          // Nem várjuk meg (await), hogy a UI gyors maradjon.
+          this.fetchEnvValue(envItem);
+
+          items.push(envItem);
         });
       }
 
@@ -108,19 +121,52 @@ export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsI
 
     return Promise.resolve([]);
   }
+
+  public fetchEnvValue(item: RemoteOpsItem) {
+    const { serverHost, path, key } = item.data;
+
+    const sshCommand = `ssh ${serverHost} "grep ^${key}= ${path}"`;
+
+    cp.exec(sshCommand, (err, stdout, stderr) => {
+      let newValue = 'Not found';
+      let tooltip = '';
+
+      // Ha hiba van (pl. timeout vagy nem létező file), ne omoljon össze, csak írja ki.
+      if (err) {
+        // Ha exit code 1 (grep nem találta), az nem hiba, csak üres
+        if (err.code === 1) {
+          newValue = 'Not set';
+        } else {
+          newValue = 'Error';
+          tooltip = stderr || err.message;
+        }
+      } else {
+        const parts = stdout.trim().split('=');
+        newValue = parts.length > 1 ? parts.slice(1).join('=') : 'Empty';
+        tooltip = `Value: ${newValue}\nPath: ${path}\nKey: ${key}`;
+      }
+
+      // UI Frissítése
+      item.description = newValue;
+      item.tooltip = tooltip;
+      this.refreshItem(item);
+    });
+  }
 }
 
 /**
  * A polimorfikus fa elemünk.
  * Tárolja, hogy ő micsoda (type) és a hozzá tartozó nyers adatot (data).
  */
-class RemoteOpsItem extends vscode.TreeItem {
+export class RemoteOpsItem extends vscode.TreeItem {
+  public tooltip: string | vscode.MarkdownString | undefined;
+
   constructor(
     public readonly type: 'group' | 'server' | 'action' | 'env',
     public readonly label: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly data: any, // Itt tároljuk a kontextust (pl. melyik szerverhez tartozik)
-    public readonly description?: string,
+    public description?: string,
   ) {
     super(label, collapsibleState);
     this.tooltip = `${this.label}`;
