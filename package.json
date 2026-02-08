@@ -28,7 +28,8 @@
       "remote-ops-container": [
         {
           "id": "remoteOpsServers",
-          "name": "Servers"
+          "name": "Servers",
+          "icon": "resources/server-icon.svg"
         }
       ]
     },
@@ -36,11 +37,17 @@
       {
         "command": "remoteOps.refreshEntry",
         "title": "Refresh",
-        "icon": "resources/refresh-icon.svg"
+        "icon": "$(refresh)"
       },
       {
         "command": "remoteOps.runCommand",
-        "title": "Run Command"
+        "title": "Run Action",
+        "icon": "$(play)"
+      },
+      {
+        "command": "remoteOps.refreshEnv",
+        "title": "Refresh Value",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -54,7 +61,12 @@
         {
           "command": "remoteOps.runCommand",
           "group": "inline",
-          "when": "viewItem == action || viewItem == env"
+          "when": "viewItem == action"
+        },
+        {
+          "command": "remoteOps.refreshEnv",
+          "group": "inline",
+          "when": "viewItem == env"
         }
       ]
     }

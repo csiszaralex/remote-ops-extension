@@ -16,20 +16,24 @@ export function activate(context: vscode.ExtensionContext) {
     async (item: RemoteOpsItem) => {
       if (item.type === 'action') {
         executeServerCommand(item.data.serverHost, item.data.command);
-      } else if (item.type === 'env') {
-        // Most már csak delegáljuk a kérést a providernek
+      }
+    },
+  );
+
+  let refreshEnvCommand = vscode.commands.registerCommand(
+    'remoteOps.refreshEnv',
+    (item: RemoteOpsItem) => {
+      if (item.type === 'env') {
         item.description = 'Refreshing...';
-        treeProvider.refreshItem(item); // UI feedback azonnal
+        treeProvider.refreshItem(item);
         treeProvider.fetchEnvValue(item);
       }
     },
   );
 
-  context.subscriptions.push(refreshCommand, runCommand);
+  context.subscriptions.push(refreshCommand, runCommand, refreshEnvCommand);
 }
 
-// ... az executeServerCommand (SSH logika) marad változatlan a fájl végén ...
-// ... az updateEnvItem függvényt TÖRÖLHETED innen, már nincs rá szükség. ...
 async function executeServerCommand(host: string, command: string) {
   const terminalName = `Server: ${host}`;
   let terminal = vscode.window.terminals.find((t) => t.name === terminalName);
@@ -45,7 +49,11 @@ async function executeServerCommand(host: string, command: string) {
   } else {
     terminal.show();
   }
-  terminal.sendText(command);
+  if (Array.isArray(command)) {
+    terminal.sendText(command.join('\n'));
+  } else {
+    terminal.sendText(command);
+  }
 }
 
 export function deactivate() {}

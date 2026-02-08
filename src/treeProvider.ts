@@ -8,7 +8,6 @@ import { ResolvedServer } from './types';
  * A <RemoteOpsItem> a mi saját típusunk, ami a fa minden egyes elemét reprezentálja.
  */
 export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsItem> {
-  // Eseménykezelő: ezzel jelezzük a VS Code-nak, ha változott az adat (pl. config mentés után)
   private _onDidChangeTreeData: vscode.EventEmitter<RemoteOpsItem | undefined | null | void> =
     new vscode.EventEmitter<RemoteOpsItem | undefined | null | void>();
   readonly onDidChangeTreeData: vscode.Event<RemoteOpsItem | undefined | null | void> =
@@ -78,26 +77,52 @@ export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsI
       const server = element.data as ResolvedServer;
       const items: RemoteOpsItem[] = [];
 
-      // A) Env Monitorok (Ha vannak)
+      // A) Env Monitorok
       if (server.envMonitors && server.envMonitors.length > 0) {
-        server.envMonitors.forEach((env) => {
-          // JAVÍTÁS 1: Label használata Key helyett (ha van)
-          const displayName = env.label || env.key;
+        server.envMonitors.forEach((envConfig) => {
+          if (envConfig.variables && Array.isArray(envConfig.variables)) {
+            envConfig.variables.forEach((variable) => {
+              let key: string;
+              let label: string;
 
-          const envItem = new RemoteOpsItem(
-            'env',
-            displayName,
-            vscode.TreeItemCollapsibleState.None,
-            { ...env, serverHost: server.sshHost },
-            'Loading...', // Kezdeti állapot
-          );
+              if (typeof variable === 'string') {
+                key = variable;
+                label = variable;
+              } else {
+                key = variable.key;
+                label = variable.label;
+              }
 
-          // JAVÍTÁS 2: Auto-fetch
-          // Azonnal elindítjuk a lekérdezést a háttérben.
-          // Nem várjuk meg (await), hogy a UI gyors maradjon.
-          this.fetchEnvValue(envItem);
+              const envItem = new RemoteOpsItem(
+                'env',
+                label,
+                vscode.TreeItemCollapsibleState.None,
+                { serverHost: server.sshHost, path: envConfig.path, key: key },
+                '...',
+              );
 
-          items.push(envItem);
+              this.fetchEnvValue(envItem);
+              items.push(envItem);
+            });
+          }
+          // const createEnvItem = (key: string, label?: string) => {
+          //   const displayName = label || key;
+          //   const envItem = new RemoteOpsItem(
+          //     'env',
+          //     displayName,
+          //     vscode.TreeItemCollapsibleState.None,
+          //     { serverHost: server.sshHost, path: env.path, key: key },
+          //     '...',
+          //   );
+          //   this.fetchEnvValue(envItem);
+          //   items.push(envItem);
+          // };
+
+          // if (env.keys && Array.isArray(env.keys)) {
+          //   env.keys.forEach((k) => createEnvItem(k));
+          // } else if (env.key) {
+          //   createEnvItem(env.key, env.label);
+          // }
         });
       }
 
@@ -110,7 +135,7 @@ export class RemoteOpsTreeProvider implements vscode.TreeDataProvider<RemoteOpsI
               action.label,
               vscode.TreeItemCollapsibleState.None,
               { ...action, serverHost: server.sshHost },
-              action.command, // Description: a parancs maga
+              Array.isArray(action.command) ? '(Multi-step script)' : action.command,
             ),
           );
         });
@@ -185,12 +210,11 @@ export class RemoteOpsItem extends vscode.TreeItem {
       case 'action':
         this.iconPath = new vscode.ThemeIcon('terminal');
         this.contextValue = 'action';
-        // Ha rákattintasz, rögtön fusson le a parancs (Pragmatikus!)
-        this.command = {
-          command: 'remoteOps.runCommand',
-          title: 'Run Action',
-          arguments: [this], // Átadjuk magunkat paraméterként
-        };
+        // this.command = {
+        //   command: 'remoteOps.runCommand',
+        //   title: 'Run Action',
+        //   arguments: [this],
+        // };
         break;
       case 'env':
         this.iconPath = new vscode.ThemeIcon('eye');
