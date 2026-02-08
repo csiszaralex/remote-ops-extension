@@ -5,7 +5,14 @@
   "version": "0.1.0",
   "author": "Alex Csiszar <vscode@csalex.dev>",
   "keywords": [],
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/csiszaralex/remote-ops-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/csiszaralex/remote-ops-extension/issues"
+  },
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -83,4 +90,3 @@
   },
   "packageManager": "pnpm@10.28.2"
 }
-
