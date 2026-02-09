@@ -1,4 +1,4 @@
-import {
+import type {
   ActionConfig,
   CommandTemplates,
   EnvMonitorConfig,
@@ -6,7 +6,7 @@ import {
   ServerGroupConfig,
 } from './configSchema';
 
-export { ActionConfig, CommandTemplates, EnvMonitorConfig, ServerConfig, ServerGroupConfig };
+export type { ActionConfig, CommandTemplates, EnvMonitorConfig, ServerConfig, ServerGroupConfig };
 
 // --- 2. Belső Modell Típusok (Runtime) ---
 

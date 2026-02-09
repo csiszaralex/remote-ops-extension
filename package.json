@@ -273,10 +273,9 @@
     "@types/node": "^22",
     "@types/vscode": "^1.80.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
-  },
-  "dependencies": {
+    "typescript": "^5",
     "zod": "^4.3.6"
   },
   "packageManager": "pnpm@10.28.2"
 }
+
