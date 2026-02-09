@@ -76,17 +76,207 @@
           "when": "viewItem == env"
         }
       ]
+    },
+    "configuration": {
+      "title": "Remote Ops",
+      "properties": {
+        "remoteOps.commandTemplates": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Reusable command templates (key: command)."
+        },
+        "remoteOps.groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the group (e.g. 'Production')."
+              },
+              "actions": {
+                "description": "Group-level actions.",
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "description": "Reference to a command template ID."
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string",
+                          "description": "Display name for the action."
+                        },
+                        "command": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ],
+                          "description": "The command to execute (string or array of strings)."
+                        }
+                      },
+                      "required": [
+                        "label",
+                        "command"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "servers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sshHost": {
+                      "type": "string",
+                      "description": "Host alias from your ~/.ssh/config."
+                    },
+                    "label": {
+                      "description": "Friendly name for the tree view.",
+                      "type": "string"
+                    },
+                    "actions": {
+                      "description": "Server-specific actions.",
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "description": "Reference to a command template ID."
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string",
+                                "description": "Display name for the action."
+                              },
+                              "command": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                ],
+                                "description": "The command to execute (string or array of strings)."
+                              }
+                            },
+                            "required": [
+                              "label",
+                              "command"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "envMonitors": {
+                      "description": "Environment variables to watch.",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "description": "Path to the .env file on the server."
+                          },
+                          "variables": {
+                            "type": "array",
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "key": {
+                                      "type": "string"
+                                    },
+                                    "label": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "key",
+                                    "label"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "description": "List of variables to monitor."
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "variables"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "sshHost"
+                  ],
+                  "additionalProperties": false
+                },
+                "description": "List of servers in this group."
+              }
+            },
+            "required": [
+              "name",
+              "servers"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Server groups configuration."
+        }
+      }
     }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "gen-schema": "ts-node --project tsconfig.scripts.json scripts/update-schema.ts"
   },
   "devDependencies": {
     "@types/node": "^22",
     "@types/vscode": "^1.80.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   },
   "packageManager": "pnpm@10.28.2"
 }
